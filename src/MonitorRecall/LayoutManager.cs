@@ -6,7 +6,7 @@ using static MonitorRecall.Native;
 namespace MonitorRecall;
 
 public record WindowInfo(long Handle, string Process, string Class, string Title,
-    int ShowCmd, int Left, int Top, int Right, int Bottom, int Flags = 0, string ExePath = "");
+    int ShowCmd, int Left, int Top, int Right, int Bottom, int Flags = 0, string ExePath = "", int TaskbarOrder = -1);
 
 public record LayoutData(DateTime Saved, string Monitors, List<WindowInfo> Windows);
 
@@ -57,7 +57,9 @@ public static class LayoutManager
             result.Add(new WindowInfo(h.ToInt64(), proc, ClassName(h), Title(h), p.showCmd,
                 p.rcNormal.Left, p.rcNormal.Top, p.rcNormal.Right, p.rcNormal.Bottom, p.flags, ProcessPath(pid)));
         }
-        return result;
+
+        var order = Taskbar.Order(result.Select(w => w.Title).ToList());
+        return result.Select((w, i) => w with { TaskbarOrder = order[i] }).ToList();
     }
 
     public static LayoutData Save(string path)
@@ -86,6 +88,7 @@ public static class LayoutManager
 
         var current = Capture();
         var used = new HashSet<long>();
+        var placed = new List<(IntPtr h, int order, int index)>();
         int count = 0;
 
         foreach (var w in data.Windows)
@@ -99,6 +102,7 @@ public static class LayoutManager
             used.Add(target.Handle);
 
             var h = new IntPtr(target.Handle);
+            placed.Add((h, w.TaskbarOrder, placed.Count));
             var p = new WINDOWPLACEMENT
             {
                 length = Marshal.SizeOf<WINDOWPLACEMENT>(),
@@ -123,6 +127,11 @@ public static class LayoutManager
             p.flags = w.Flags & WPF_RESTORETOMAXIMIZED;   // 最大化から最小化したものは最大化で戻す
             if (SetWindowPlacement(h, ref p)) count++;
         }
+
+        // タスクバーボタンを保存時の並び順で登録し直す（順序不明のものは後ろへ）
+        if (placed.Any(x => x.order >= 0))
+            Taskbar.Reorder(placed.OrderBy(x => x.order < 0).ThenBy(x => x.order).ThenBy(x => x.index).Select(x => x.h).ToList());
+
         return (count, data.Windows.Count);
     }
 }
