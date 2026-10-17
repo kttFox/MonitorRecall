@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using Timer = System.Windows.Forms.Timer;
 
 namespace MonitorRecall;
@@ -13,6 +13,10 @@ internal sealed class LayoutWatcher : IDisposable
     readonly Timer _saveTimer = new();
     readonly Timer _restoreTimer = new();
     string _lastSignature;
+    readonly Native.WinEventProc _showProc;   // GC されないよう保持
+    readonly IntPtr _showHook;
+    readonly Dictionary<IntPtr, DateTime> _shown = new();
+    readonly Timer _shownTimer = new() { Interval = 500 };
 
     public string BaselineSignature { get; private set; }
     public bool Enabled => _saveTimer.Enabled;
@@ -35,6 +39,35 @@ internal sealed class LayoutWatcher : IDisposable
             StateChanged?.Invoke();
         };
         SystemEvents.DisplaySettingsChanged += OnDisplayChanged;
+
+        // タスクトレイなどから再表示されたウインドウを保存位置へ戻す
+        _showProc = OnWindowShown;
+        _showHook = Native.SetWinEventHook(Native.EVENT_OBJECT_SHOW, Native.EVENT_OBJECT_SHOW,
+            IntPtr.Zero, _showProc, 0, 0, Native.WINEVENT_OUTOFCONTEXT);
+        _shownTimer.Tick += (_, _) => RestoreShown();
+    }
+
+    void OnWindowShown(IntPtr hook, uint ev, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
+    {
+        if (idObject != 0 /*OBJID_WINDOW*/ || hwnd == IntPtr.Zero || !Enabled) return;
+        if (Native.GetAncestor(hwnd, 2 /*GA_ROOT*/) != hwnd) return;   // 子ウインドウは対象外
+        // アプリ側の初期配置が終わるのを待ってから処理する
+        _shown[hwnd] = DateTime.Now;
+        _shownTimer.Start();
+    }
+
+    void RestoreShown()
+    {
+        var ready = _shown.Where(kv => DateTime.Now - kv.Value >= TimeSpan.FromMilliseconds(400)).Select(kv => kv.Key).ToList();
+        foreach (var h in ready) _shown.Remove(h);
+        if (_shown.Count == 0) _shownTimer.Stop();
+        if (ready.Count == 0 || _restoreTimer.Enabled || LayoutManager.MonitorSignature() != BaselineSignature) return;
+
+        foreach (var h in ready)
+        {
+            if (!LayoutManager.RestoreOne(_path, h)) continue;
+            Log?.Invoke($"再表示されたウインドウを復元しました: {Native.Title(h)}");
+        }
     }
 
     public void SetInterval(int sec) => _saveTimer.Interval = Math.Max(1, sec) * 1000;
@@ -120,6 +153,8 @@ internal sealed class LayoutWatcher : IDisposable
     public void Dispose()
     {
         SystemEvents.DisplaySettingsChanged -= OnDisplayChanged;
+        if (_showHook != IntPtr.Zero) Native.UnhookWinEvent(_showHook);
+        _shownTimer.Dispose();
         _saveTimer.Dispose();
         _restoreTimer.Dispose();
     }

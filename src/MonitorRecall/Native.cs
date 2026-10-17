@@ -16,6 +16,7 @@ internal static class Native
         public RECT rcNormal;
     }
 
+    public const int SW_HIDE = 0;
     public const int SW_SHOWNORMAL = 1;
     public const int SW_SHOWMAXIMIZED = 3;
     public const int SW_SHOWMINIMIZED = 2;
@@ -26,10 +27,13 @@ internal static class Native
     public const int WPF_RESTORETOMAXIMIZED = 2;
 
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+    public delegate void WinEventProc(IntPtr hook, uint ev, IntPtr hwnd, int idObject, int idChild, uint thread, uint time);
     public delegate bool MonitorEnumProc(IntPtr hMon, IntPtr hdc, ref RECT rc, IntPtr lParam);
 
     [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc f, IntPtr l);
     [DllImport("user32.dll")] public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc f, IntPtr l);
+    [DllImport("user32.dll")] public static extern bool IsWindow(IntPtr h);
+    [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
     [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
     [DllImport("user32.dll")] public static extern IntPtr GetWindow(IntPtr h, uint cmd);
     [DllImport("user32.dll")] public static extern int GetWindowLong(IntPtr h, int idx);
@@ -39,6 +43,11 @@ internal static class Native
     [DllImport("user32.dll")] public static extern bool GetWindowPlacement(IntPtr h, ref WINDOWPLACEMENT p);
     [DllImport("user32.dll")] public static extern bool SetWindowPlacement(IntPtr h, ref WINDOWPLACEMENT p);
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
+    [DllImport("user32.dll")] public static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc f, uint pid, uint tid, uint flags);
+    [DllImport("user32.dll")] public static extern IntPtr GetAncestor(IntPtr h, uint flags);
+    [DllImport("user32.dll")] public static extern bool UnhookWinEvent(IntPtr hook);
+    public const uint EVENT_OBJECT_SHOW = 0x8002;
+    public const uint WINEVENT_OUTOFCONTEXT = 0;
     [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr h, int attr, out int value, int size);
     [DllImport("kernel32.dll")] public static extern bool AttachConsole(int pid);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int RegisterWindowMessage(string name);

@@ -30,12 +30,13 @@ public static class LayoutManager
         return string.Join("|", parts);
     }
 
-    public static List<WindowInfo> Capture()
+    public static List<WindowInfo> Capture(bool taskbarOrder = true)
     {
         var handles = new List<IntPtr>();
         EnumWindows((h, _) =>
         {
-            if (!IsWindowVisible(h)) return true;
+            // 非表示でも「最小化かつタイトルバーあり」はタスクトレイ格納中（Thunderbird など）とみなして対象にする
+            if (!IsWindowVisible(h) && !IsInTray(h)) return true;
             if (GetWindow(h, 4 /*GW_OWNER*/) != IntPtr.Zero) return true;          // ダイアログ等
             if ((GetWindowLong(h, -20 /*GWL_EXSTYLE*/) & 0x80 /*WS_EX_TOOLWINDOW*/) != 0) return true;
             DwmGetWindowAttribute(h, 14 /*DWMWA_CLOAKED*/, out int cloaked, sizeof(int));
@@ -58,13 +59,29 @@ public static class LayoutManager
                 p.rcNormal.Left, p.rcNormal.Top, p.rcNormal.Right, p.rcNormal.Bottom, p.flags, ProcessPath(pid)));
         }
 
+        if (!taskbarOrder) return result;
         var order = Taskbar.Order(result.Select(w => w.Title).ToList());
         return result.Select((w, i) => w with { TaskbarOrder = order[i] }).ToList();
     }
 
     public static LayoutData Save(string path)
     {
-        var data = new LayoutData(DateTime.Now, MonitorSignature(), Capture());
+        var windows = Capture();
+        // タスクトレイに格納中（非表示）のウインドウは列挙されないため、前回の保存内容を引き継ぐ。
+        // 引き継がないと、トレイから再表示したときに復元対象から消えている
+        LayoutData? prev = null;
+        try { prev = Load(path); } catch { }
+        if (prev != null)
+        {
+            // ハンドルが残っている非表示ウインドウに加え、トレイ格納時にウインドウを破棄するアプリのため
+            // 「プロセスは動いているが表示中のウインドウが 1 つもない」ものも引き継ぐ
+            var running = System.Diagnostics.Process.GetProcesses().Select(pr => { using (pr) return pr.ProcessName; }).ToHashSet();
+            var visibleProcs = windows.Select(c => c.Process).ToHashSet();
+            windows.AddRange(prev.Windows.Where(w => !windows.Any(c => c.Handle == w.Handle) &&
+                (IsHiddenAlive(w) || (running.Contains(w.Process) && !visibleProcs.Contains(w.Process)))));
+        }
+
+        var data = new LayoutData(DateTime.Now, MonitorSignature(), windows);
         Write(path, data);
         return data;
     }
@@ -79,6 +96,74 @@ public static class LayoutManager
 
     public static LayoutData? Load(string path) =>
         File.Exists(path) ? JsonSerializer.Deserialize<LayoutData>(File.ReadAllText(path)) : null;
+
+    /// <summary>タスクトレイに格納中のウインドウか（非表示・最小化・タイトルバーあり）</summary>
+    static bool IsInTray(IntPtr h) =>
+        !IsWindowVisible(h) && IsIconic(h) && (GetWindowLong(h, -16 /*GWL_STYLE*/) & 0xC00000 /*WS_CAPTION*/) == 0xC00000;
+
+    /// <summary>保存時のウインドウが今も存在し、非表示（タスクトレイ格納中など）か</summary>
+    static bool IsHiddenAlive(WindowInfo w)
+    {
+        var h = new IntPtr(w.Handle);
+        if (!IsWindow(h) || IsWindowVisible(h)) return false;
+        GetWindowThreadProcessId(h, out uint pid);
+        // ハンドルが別プロセスに再利用されていないか確認
+        if (w.ExePath.Length > 0) return string.Equals(ProcessPath(pid), w.ExePath, StringComparison.OrdinalIgnoreCase);
+        try { using var pr = Process.GetProcessById((int)pid); return pr.ProcessName == w.Process; }
+        catch { return false; }
+    }
+
+    /// <summary>保存データと現在のウインドウを対応付ける（保存エントリ → 対象ウインドウ）</summary>
+    static List<(WindowInfo saved, WindowInfo target)> Match(LayoutData data, List<WindowInfo> current)
+    {
+        var used = new HashSet<long>();
+        var result = new List<(WindowInfo, WindowInfo)>();
+        foreach (var w in data.Windows)
+        {
+            // 1) 同じハンドル  2) プロセス+クラス+タイトル  3) プロセス+クラス
+            var target =
+                current.FirstOrDefault(c => !used.Contains(c.Handle) && c.Handle == w.Handle && c.Process == w.Process)
+                ?? current.FirstOrDefault(c => !used.Contains(c.Handle) && c.Process == w.Process && c.Class == w.Class && c.Title == w.Title)
+                ?? current.FirstOrDefault(c => !used.Contains(c.Handle) && c.Process == w.Process && c.Class == w.Class);
+            if (target == null) continue;
+            used.Add(target.Handle);
+            result.Add((w, target));
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// 新たに表示されたウインドウ（タスクトレイからの再表示など）を保存位置へ戻す。
+    /// 既に表示中のウインドウに対応する保存エントリは使わない
+    /// </summary>
+    public static bool RestoreOne(string path, IntPtr hwnd)
+    {
+        LayoutData? data;
+        try { data = Load(path); } catch { return false; }
+        if (data == null) return false;
+
+        var pair = Match(data, Capture(taskbarOrder: false)).FirstOrDefault(m => m.target.Handle == hwnd.ToInt64());
+        if (pair.saved == null) return false;
+        var w = pair.saved;
+        var cur = pair.target;
+        if (cur.Left == w.Left && cur.Top == w.Top && cur.Right == w.Right && cur.Bottom == w.Bottom) return false;
+
+        if (cur.ShowCmd == SW_SHOWMAXIMIZED) ShowWindow(hwnd, SW_RESTORE);
+        var p = new WINDOWPLACEMENT
+        {
+            length = Marshal.SizeOf<WINDOWPLACEMENT>(),
+            // ユーザーが開いたところなので最小化はせず、最大化だけ再現する
+            showCmd = w.ShowCmd == SW_SHOWMAXIMIZED || (w.Flags & WPF_RESTORETOMAXIMIZED) != 0 ? SW_SHOWMAXIMIZED : SW_SHOWNOACTIVATE,
+            rcNormal = new RECT { Left = w.Left, Top = w.Top, Right = w.Right, Bottom = w.Bottom },
+        };
+        if (p.showCmd == SW_SHOWMAXIMIZED)
+        {
+            // 通常表示で目的のモニターへ移してから最大化する
+            var n = p; n.showCmd = SW_SHOWNOACTIVATE;
+            SetWindowPlacement(hwnd, ref n);
+        }
+        return SetWindowPlacement(hwnd, ref p);
+    }
 
     /// <returns>(復元数, 保存数)</returns>
     public static (int restored, int total) Restore(string path)
@@ -98,10 +183,38 @@ public static class LayoutManager
                 current.FirstOrDefault(c => !used.Contains(c.Handle) && c.Handle == w.Handle && c.Process == w.Process)
                 ?? current.FirstOrDefault(c => !used.Contains(c.Handle) && c.Process == w.Process && c.Class == w.Class && c.Title == w.Title)
                 ?? current.FirstOrDefault(c => !used.Contains(c.Handle) && c.Process == w.Process && c.Class == w.Class);
-            if (target == null) continue;
+            if (target == null)
+            {
+                // トレイに格納中のウインドウは非表示のまま位置だけ戻し、再表示時に正しい位置へ出す
+                if (IsHiddenAlive(w))
+                {
+                    var hp = new WINDOWPLACEMENT
+                    {
+                        length = Marshal.SizeOf<WINDOWPLACEMENT>(),
+                        showCmd = SW_HIDE,
+                        flags = w.Flags & WPF_RESTORETOMAXIMIZED,
+                        rcNormal = new RECT { Left = w.Left, Top = w.Top, Right = w.Right, Bottom = w.Bottom },
+                    };
+                    if (SetWindowPlacement(new IntPtr(w.Handle), ref hp)) count++;
+                }
+                continue;
+            }
             used.Add(target.Handle);
 
             var h = new IntPtr(target.Handle);
+            if (!IsWindowVisible(h))
+            {
+                // トレイ格納中は非表示のまま位置だけ戻す（表示するとトレイから出てしまう）
+                var tp = new WINDOWPLACEMENT
+                {
+                    length = Marshal.SizeOf<WINDOWPLACEMENT>(),
+                    showCmd = SW_HIDE,
+                    flags = w.Flags & WPF_RESTORETOMAXIMIZED,
+                    rcNormal = new RECT { Left = w.Left, Top = w.Top, Right = w.Right, Bottom = w.Bottom },
+                };
+                if (SetWindowPlacement(h, ref tp)) count++;
+                continue;
+            }
             placed.Add((h, w.TaskbarOrder, placed.Count));
             var p = new WINDOWPLACEMENT
             {
