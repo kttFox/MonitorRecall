@@ -42,6 +42,7 @@ public static class LayoutManager
             DwmGetWindowAttribute(h, 14 /*DWMWA_CLOAKED*/, out int cloaked, sizeof(int));
             if (cloaked != 0) return true;                                          // 別仮想デスクトップ等
             if (Title(h).Length == 0) return true;
+            if (ClassName(h) == "OperationStatusWindow") return true;               // エクスプローラーのコピー進捗ダイアログ
             handles.Add(h);
             return true;
         }, IntPtr.Zero);
