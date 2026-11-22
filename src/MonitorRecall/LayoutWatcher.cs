@@ -76,7 +76,7 @@ internal sealed class LayoutWatcher : IDisposable
     public void Start()
     {
         if (Enabled) return;
-        if (LayoutManager.MonitorSignature() == BaselineSignature) Save(quiet: true);
+        if (LayoutManager.MonitorSignature() == BaselineSignature) _ = Save(quiet: true);
         _saveTimer.Start();
         Log?.Invoke("自動監視を開始しました");
         StateChanged?.Invoke();
@@ -97,15 +97,38 @@ internal sealed class LayoutWatcher : IDisposable
         BaselineSignature = _lastSignature = LayoutManager.MonitorSignature();
         _restoreTimer.Stop();
         Log?.Invoke($"基準のモニター構成を更新しました（{MonitorCount(BaselineSignature)} 台）");
-        Save();
+        _ = Save();
     }
 
-    public LayoutData Save(bool quiet = false)
+    bool _saving;
+    int _generation;   // モニター構成の変化ごとに増やす（保存中の変化検出用）
+
+    /// <summary>
+    /// ウインドウ情報の収集（UI Automation によるタスクバー走査など）は時間がかかり、
+    /// 応答しないアプリがあると待たされるため、UI スレッドを止めないようスレッドプールで行う
+    /// </summary>
+    public async Task Save(bool quiet = false)
     {
-        var data = LayoutManager.Save(_path);
-        if (!quiet) Log?.Invoke($"{data.Windows.Count} 個のウインドウを保存しました");
+        if (_saving) return;   // 前回の保存がまだ終わっていなければ今回は見送る
+        _saving = true;
+        try
+        {
+            var gen = Volatile.Read(ref _generation);
+            var baseline = BaselineSignature;
+            var data = await Task.Run(() => LayoutManager.Save(_path, () =>
+                Volatile.Read(ref _generation) == gen && LayoutManager.MonitorSignature() == baseline));
+            if (data == null) Log?.Invoke("保存中にモニター構成が変化したため、保存を破棄しました");
+            else if (!quiet) Log?.Invoke($"{data.Windows.Count} 個のウインドウを保存しました");
+        }
+        catch (Exception ex)
+        {
+            Log?.Invoke($"保存に失敗しました: {ex.Message}");
+        }
+        finally
+        {
+            _saving = false;
+        }
         StateChanged?.Invoke();
-        return data;
     }
 
     public (int restored, int total) Restore()
@@ -119,6 +142,7 @@ internal sealed class LayoutWatcher : IDisposable
 
     void OnDisplayChanged(object? sender, EventArgs e)
     {
+        Interlocked.Increment(ref _generation);
         if (Enabled) Check();
         else StateChanged?.Invoke();
     }
@@ -129,6 +153,7 @@ internal sealed class LayoutWatcher : IDisposable
         if (sig != _lastSignature)
         {
             _lastSignature = sig;
+            Interlocked.Increment(ref _generation);
             _restoreTimer.Stop();
             if (sig == BaselineSignature)
             {
@@ -144,7 +169,7 @@ internal sealed class LayoutWatcher : IDisposable
         }
         // 正常構成かつ復元待ちでない間だけ保存（集約後の配置で上書きしない）
         if (sig == BaselineSignature && !_restoreTimer.Enabled)
-            Save(quiet: true);
+            _ = Save(quiet: true);
     }
 
     public static int MonitorCount(string signature) =>

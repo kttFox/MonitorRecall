@@ -65,8 +65,17 @@ public static class LayoutManager
         return result.Select((w, i) => w with { TaskbarOrder = order[i] }).ToList();
     }
 
-    public static LayoutData Save(string path)
+    static readonly object FileLock = new();
+
+    /// <param name="canCommit">書き込み直前に評価し、false なら保存を破棄する（収集中にモニター構成が変わった場合など）</param>
+    public static LayoutData? Save(string path, Func<bool>? canCommit = null)
     {
+        lock (FileLock) return SaveCore(path, canCommit);
+    }
+
+    static LayoutData? SaveCore(string path, Func<bool>? canCommit)
+    {
+        var signature = MonitorSignature();
         var windows = Capture();
         // タスクトレイに格納中（非表示）のウインドウは列挙されないため、前回の保存内容を引き継ぐ。
         // 引き継がないと、トレイから再表示したときに復元対象から消えている
@@ -82,12 +91,21 @@ public static class LayoutManager
                 (IsHiddenAlive(w) || (running.Contains(w.Process) && !visibleProcs.Contains(w.Process)))));
         }
 
-        var data = new LayoutData(DateTime.Now, MonitorSignature(), windows);
-        Write(path, data);
+        // 収集には時間がかかるため、その間にモニター構成が変わってウインドウが集約されていたら
+        // 崩れた配置で上書きしないよう破棄する
+        if (MonitorSignature() != signature || (canCommit != null && !canCommit())) return null;
+
+        var data = new LayoutData(DateTime.Now, signature, windows);
+        WriteCore(path, data);
         return data;
     }
 
     public static void Write(string path, LayoutData data)
+    {
+        lock (FileLock) WriteCore(path, data);
+    }
+
+    static void WriteCore(string path, LayoutData data)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var tmp = path + ".tmp";
@@ -95,8 +113,16 @@ public static class LayoutManager
         File.Move(tmp, path, overwrite: true);
     }
 
-    public static LayoutData? Load(string path) =>
-        File.Exists(path) ? JsonSerializer.Deserialize<LayoutData>(File.ReadAllText(path)) : null;
+    public static LayoutData? Load(string path)
+    {
+        string json;
+        lock (FileLock)
+        {
+            if (!File.Exists(path)) return null;
+            json = File.ReadAllText(path);
+        }
+        return JsonSerializer.Deserialize<LayoutData>(json);
+    }
 
     /// <summary>タスクトレイに格納中のウインドウか（非表示・最小化・タイトルバーあり）</summary>
     static bool IsInTray(IntPtr h) =>
