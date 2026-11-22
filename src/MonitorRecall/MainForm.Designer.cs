@@ -20,575 +20,630 @@
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
+		#region Windows Form Designer generated code
 
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent()
-        {
-            components = new System.ComponentModel.Container();
-            menuMain = new MenuStrip();
-            mnuFile = new ToolStripMenuItem();
-            mnuExport = new ToolStripMenuItem();
-            mnuImport = new ToolStripMenuItem();
-            mnuFileSep = new ToolStripSeparator();
-            mnuFileExit = new ToolStripMenuItem();
-            tlpRoot = new TableLayoutPanel();
-            grpStatus = new GroupBox();
-            tlpStatus = new TableLayoutPanel();
-            lblWatchCaption = new Label();
-            lblWatch = new Label();
-            lblMonitorCaption = new Label();
-            lblMonitor = new Label();
-            lblSavedCaption = new Label();
-            lblSaved = new Label();
-            flpButtons = new FlowLayoutPanel();
-            btnSave = new Button();
-            btnRestore = new Button();
-            btnBaseline = new Button();
-            grpOptions = new GroupBox();
-            flpOptions = new FlowLayoutPanel();
-            chkWatch = new CheckBox();
-            lblInterval = new Label();
-            numInterval = new NumericUpDown();
-            lblDelay = new Label();
-            numDelay = new NumericUpDown();
-            chkStartup = new CheckBox();
-            grpWindows = new GroupBox();
-            lvWindows = new ListView();
-            colProcess = new ColumnHeader();
-            colTitle = new ColumnHeader();
-            colState = new ColumnHeader();
-            colPosition = new ColumnHeader();
-            colSize = new ColumnHeader();
-            colMonitor = new ColumnHeader();
-            imgIcons = new ImageList(components);
-            grpLog = new GroupBox();
-            txtLog = new TextBox();
-            trayIcon = new NotifyIcon(components);
-            dlgExport = new SaveFileDialog();
-            dlgImport = new OpenFileDialog();
-            trayMenu = new ContextMenuStrip(components);
-            mnuShow = new ToolStripMenuItem();
-            mnuSep1 = new ToolStripSeparator();
-            mnuSave = new ToolStripMenuItem();
-            mnuRestore = new ToolStripMenuItem();
-            mnuSep2 = new ToolStripSeparator();
-            mnuExit = new ToolStripMenuItem();
-            menuMain.SuspendLayout();
-            tlpRoot.SuspendLayout();
-            grpStatus.SuspendLayout();
-            tlpStatus.SuspendLayout();
-            flpButtons.SuspendLayout();
-            grpOptions.SuspendLayout();
-            flpOptions.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numInterval).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numDelay).BeginInit();
-            grpWindows.SuspendLayout();
-            grpLog.SuspendLayout();
-            trayMenu.SuspendLayout();
-            SuspendLayout();
-            //
-            // menuMain
-            //
-            menuMain.Items.AddRange(new ToolStripItem[] { mnuFile });
-            menuMain.Location = new Point(0, 0);
-            menuMain.Name = "menuMain";
-            menuMain.Size = new Size(820, 24);
-            menuMain.TabIndex = 1;
-            //
-            // mnuFile
-            //
-            mnuFile.DropDownItems.AddRange(new ToolStripItem[] { mnuExport, mnuImport, mnuFileSep, mnuFileExit });
-            mnuFile.Name = "mnuFile";
-            mnuFile.Size = new Size(67, 20);
-            mnuFile.Text = "ファイル(&F)";
-            //
-            // mnuExport
-            //
-            mnuExport.Name = "mnuExport";
-            mnuExport.Size = new Size(180, 22);
-            mnuExport.Text = "エクスポート(&E)...";
-            mnuExport.Click += mnuExport_Click;
-            //
-            // mnuImport
-            //
-            mnuImport.Name = "mnuImport";
-            mnuImport.Size = new Size(180, 22);
-            mnuImport.Text = "インポート(&I)...";
-            mnuImport.Click += mnuImport_Click;
-            //
-            // mnuFileSep
-            //
-            mnuFileSep.Name = "mnuFileSep";
-            mnuFileSep.Size = new Size(177, 6);
-            //
-            // mnuFileExit
-            //
-            mnuFileExit.Name = "mnuFileExit";
-            mnuFileExit.Size = new Size(180, 22);
-            mnuFileExit.Text = "終了(&X)";
-            mnuFileExit.Click += mnuExit_Click;
-            //
-            // tlpRoot
-            //
-            tlpRoot.ColumnCount = 1;
-            tlpRoot.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpRoot.Controls.Add(grpStatus, 0, 0);
-            tlpRoot.Controls.Add(flpButtons, 0, 1);
-            tlpRoot.Controls.Add(grpOptions, 0, 2);
-            tlpRoot.Controls.Add(grpWindows, 0, 3);
-            tlpRoot.Controls.Add(grpLog, 0, 4);
-            tlpRoot.Dock = DockStyle.Fill;
-            tlpRoot.Location = new Point(0, 24);
-            tlpRoot.Name = "tlpRoot";
-            tlpRoot.Padding = new Padding(8);
-            tlpRoot.RowCount = 5;
-            tlpRoot.RowStyles.Add(new RowStyle());
-            tlpRoot.RowStyles.Add(new RowStyle());
-            tlpRoot.RowStyles.Add(new RowStyle());
-            tlpRoot.RowStyles.Add(new RowStyle(SizeType.Percent, 70F));
-            tlpRoot.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tlpRoot.Size = new Size(820, 560);
-            tlpRoot.TabIndex = 0;
-            //
-            // grpStatus
-            //
-            grpStatus.AutoSize = true;
-            grpStatus.Controls.Add(tlpStatus);
-            grpStatus.Dock = DockStyle.Fill;
-            grpStatus.Location = new Point(11, 11);
-            grpStatus.Name = "grpStatus";
-            grpStatus.Size = new Size(798, 100);
-            grpStatus.TabIndex = 0;
-            grpStatus.TabStop = false;
-            grpStatus.Text = "状態";
-            //
-            // tlpStatus
-            //
-            tlpStatus.AutoSize = true;
-            tlpStatus.ColumnCount = 2;
-            tlpStatus.ColumnStyles.Add(new ColumnStyle());
-            tlpStatus.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tlpStatus.Controls.Add(lblWatchCaption, 0, 0);
-            tlpStatus.Controls.Add(lblWatch, 1, 0);
-            tlpStatus.Controls.Add(lblMonitorCaption, 0, 1);
-            tlpStatus.Controls.Add(lblMonitor, 1, 1);
-            tlpStatus.Controls.Add(lblSavedCaption, 0, 2);
-            tlpStatus.Controls.Add(lblSaved, 1, 2);
-            tlpStatus.Dock = DockStyle.Fill;
-            tlpStatus.Location = new Point(3, 19);
-            tlpStatus.Name = "tlpStatus";
-            tlpStatus.Padding = new Padding(4);
-            tlpStatus.RowCount = 3;
-            tlpStatus.RowStyles.Add(new RowStyle());
-            tlpStatus.RowStyles.Add(new RowStyle());
-            tlpStatus.RowStyles.Add(new RowStyle());
-            tlpStatus.Size = new Size(792, 78);
-            tlpStatus.TabIndex = 0;
-            //
-            // lblWatchCaption
-            //
-            lblWatchCaption.AutoSize = true;
-            lblWatchCaption.Location = new Point(7, 8);
-            lblWatchCaption.Margin = new Padding(3, 4, 8, 4);
-            lblWatchCaption.Name = "lblWatchCaption";
-            lblWatchCaption.Size = new Size(58, 15);
-            lblWatchCaption.TabIndex = 0;
-            lblWatchCaption.Text = "監視状態:";
-            //
-            // lblWatch
-            //
-            lblWatch.AutoSize = true;
-            lblWatch.Font = new Font("Yu Gothic UI", 9F, FontStyle.Bold);
-            lblWatch.Location = new Point(76, 8);
-            lblWatch.Margin = new Padding(3, 4, 3, 4);
-            lblWatch.Name = "lblWatch";
-            lblWatch.Size = new Size(43, 15);
-            lblWatch.TabIndex = 1;
-            lblWatch.Text = "停止中";
-            //
-            // lblMonitorCaption
-            //
-            lblMonitorCaption.AutoSize = true;
-            lblMonitorCaption.Location = new Point(7, 31);
-            lblMonitorCaption.Margin = new Padding(3, 4, 8, 4);
-            lblMonitorCaption.Name = "lblMonitorCaption";
-            lblMonitorCaption.Size = new Size(50, 15);
-            lblMonitorCaption.TabIndex = 2;
-            lblMonitorCaption.Text = "モニター:";
-            //
-            // lblMonitor
-            //
-            lblMonitor.AutoSize = true;
-            lblMonitor.Location = new Point(76, 31);
-            lblMonitor.Margin = new Padding(3, 4, 3, 4);
-            lblMonitor.Name = "lblMonitor";
-            lblMonitor.Size = new Size(12, 15);
-            lblMonitor.TabIndex = 3;
-            lblMonitor.Text = "-";
-            //
-            // lblSavedCaption
-            //
-            lblSavedCaption.AutoSize = true;
-            lblSavedCaption.Location = new Point(7, 54);
-            lblSavedCaption.Margin = new Padding(3, 4, 8, 4);
-            lblSavedCaption.Name = "lblSavedCaption";
-            lblSavedCaption.Size = new Size(58, 15);
-            lblSavedCaption.TabIndex = 4;
-            lblSavedCaption.Text = "最終保存:";
-            //
-            // lblSaved
-            //
-            lblSaved.AutoSize = true;
-            lblSaved.Location = new Point(76, 54);
-            lblSaved.Margin = new Padding(3, 4, 3, 4);
-            lblSaved.Name = "lblSaved";
-            lblSaved.Size = new Size(12, 15);
-            lblSaved.TabIndex = 5;
-            lblSaved.Text = "-";
-            //
-            // flpButtons
-            //
-            flpButtons.AutoSize = true;
-            flpButtons.Controls.Add(btnSave);
-            flpButtons.Controls.Add(btnRestore);
-            flpButtons.Controls.Add(btnBaseline);
-            flpButtons.Dock = DockStyle.Fill;
-            flpButtons.Location = new Point(11, 117);
-            flpButtons.Name = "flpButtons";
-            flpButtons.Size = new Size(798, 35);
-            flpButtons.TabIndex = 1;
-            //
-            // btnSave
-            //
-            btnSave.AutoSize = true;
-            btnSave.Location = new Point(3, 3);
-            btnSave.Name = "btnSave";
-            btnSave.Padding = new Padding(8, 2, 8, 2);
-            btnSave.Size = new Size(90, 29);
-            btnSave.TabIndex = 0;
-            btnSave.Text = "今すぐ保存";
-            btnSave.UseVisualStyleBackColor = true;
-            btnSave.Click += btnSave_Click;
-            //
-            // btnRestore
-            //
-            btnRestore.AutoSize = true;
-            btnRestore.Location = new Point(99, 3);
-            btnRestore.Name = "btnRestore";
-            btnRestore.Padding = new Padding(8, 2, 8, 2);
-            btnRestore.Size = new Size(90, 29);
-            btnRestore.TabIndex = 1;
-            btnRestore.Text = "今すぐ復元";
-            btnRestore.UseVisualStyleBackColor = true;
-            btnRestore.Click += btnRestore_Click;
-            //
-            // btnBaseline
-            //
-            btnBaseline.AutoSize = true;
-            btnBaseline.Location = new Point(195, 3);
-            btnBaseline.Name = "btnBaseline";
-            btnBaseline.Padding = new Padding(8, 2, 8, 2);
-            btnBaseline.Size = new Size(190, 29);
-            btnBaseline.TabIndex = 2;
-            btnBaseline.Text = "現在のモニター構成を基準にする";
-            btnBaseline.UseVisualStyleBackColor = true;
-            btnBaseline.Click += btnBaseline_Click;
-            //
-            // grpOptions
-            //
-            grpOptions.AutoSize = true;
-            grpOptions.Controls.Add(flpOptions);
-            grpOptions.Dock = DockStyle.Fill;
-            grpOptions.Location = new Point(11, 158);
-            grpOptions.Name = "grpOptions";
-            grpOptions.Size = new Size(798, 60);
-            grpOptions.TabIndex = 2;
-            grpOptions.TabStop = false;
-            grpOptions.Text = "設定";
-            //
-            // flpOptions
-            //
-            flpOptions.AutoSize = true;
-            flpOptions.Controls.Add(chkWatch);
-            flpOptions.Controls.Add(lblInterval);
-            flpOptions.Controls.Add(numInterval);
-            flpOptions.Controls.Add(lblDelay);
-            flpOptions.Controls.Add(numDelay);
-            flpOptions.Controls.Add(chkStartup);
-            flpOptions.Dock = DockStyle.Fill;
-            flpOptions.Location = new Point(3, 19);
-            flpOptions.Name = "flpOptions";
-            flpOptions.Padding = new Padding(4);
-            flpOptions.Size = new Size(792, 38);
-            flpOptions.TabIndex = 0;
-            //
-            // chkWatch
-            //
-            chkWatch.AutoSize = true;
-            chkWatch.Location = new Point(7, 9);
-            chkWatch.Margin = new Padding(3, 5, 19, 3);
-            chkWatch.Name = "chkWatch";
-            chkWatch.Size = new Size(74, 19);
-            chkWatch.TabIndex = 0;
-            chkWatch.Text = "自動監視";
-            chkWatch.UseVisualStyleBackColor = true;
-            chkWatch.CheckedChanged += chkWatch_CheckedChanged;
-            //
-            // lblInterval
-            //
-            lblInterval.AutoSize = true;
-            lblInterval.Location = new Point(103, 11);
-            lblInterval.Margin = new Padding(3, 7, 0, 0);
-            lblInterval.Name = "lblInterval";
-            lblInterval.Size = new Size(79, 15);
-            lblInterval.TabIndex = 1;
-            lblInterval.Text = "保存間隔(秒):";
-            //
-            // numInterval
-            //
-            numInterval.Location = new Point(185, 7);
-            numInterval.Margin = new Padding(3, 3, 19, 3);
-            numInterval.Maximum = new decimal(new int[] { 3600, 0, 0, 0 });
-            numInterval.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            numInterval.Name = "numInterval";
-            numInterval.Size = new Size(60, 23);
-            numInterval.TabIndex = 2;
-            numInterval.Value = new decimal(new int[] { 10, 0, 0, 0 });
-            numInterval.ValueChanged += numInterval_ValueChanged;
-            //
-            // lblDelay
-            //
-            lblDelay.AutoSize = true;
-            lblDelay.Location = new Point(267, 11);
-            lblDelay.Margin = new Padding(3, 7, 0, 0);
-            lblDelay.Name = "lblDelay";
-            lblDelay.Size = new Size(109, 15);
-            lblDelay.TabIndex = 3;
-            lblDelay.Text = "復元までの待ち(秒):";
-            //
-            // numDelay
-            //
-            numDelay.Location = new Point(379, 7);
-            numDelay.Margin = new Padding(3, 3, 19, 3);
-            numDelay.Maximum = new decimal(new int[] { 120, 0, 0, 0 });
-            numDelay.Name = "numDelay";
-            numDelay.Size = new Size(60, 23);
-            numDelay.TabIndex = 4;
-            numDelay.Value = new decimal(new int[] { 5, 0, 0, 0 });
-            numDelay.ValueChanged += numDelay_ValueChanged;
-            //
-            // chkStartup
-            //
-            chkStartup.AutoSize = true;
-            chkStartup.Location = new Point(461, 9);
-            chkStartup.Margin = new Padding(3, 5, 3, 3);
-            chkStartup.Name = "chkStartup";
-            chkStartup.Size = new Size(110, 19);
-            chkStartup.TabIndex = 5;
-            chkStartup.Text = "ログオン時に起動";
-            chkStartup.UseVisualStyleBackColor = true;
-            chkStartup.CheckedChanged += chkStartup_CheckedChanged;
-            //
-            // grpWindows
-            //
-            grpWindows.Controls.Add(lvWindows);
-            grpWindows.Dock = DockStyle.Fill;
-            grpWindows.Location = new Point(11, 224);
-            grpWindows.Name = "grpWindows";
-            grpWindows.Size = new Size(798, 227);
-            grpWindows.TabIndex = 3;
-            grpWindows.TabStop = false;
-            grpWindows.Text = "保存済みのウインドウ";
-            //
-            // lvWindows
-            //
-            lvWindows.Columns.AddRange(new ColumnHeader[] { colProcess, colTitle, colState, colPosition, colSize, colMonitor });
-            lvWindows.Dock = DockStyle.Fill;
-            lvWindows.FullRowSelect = true;
-            lvWindows.GridLines = true;
-            lvWindows.HideSelection = false;
-            lvWindows.Location = new Point(3, 19);
-            lvWindows.Name = "lvWindows";
-            lvWindows.Size = new Size(792, 205);
-            lvWindows.SmallImageList = imgIcons;
-            lvWindows.TabIndex = 0;
-            lvWindows.UseCompatibleStateImageBehavior = false;
-            lvWindows.View = View.Details;
-            //
-            // colProcess
-            //
-            colProcess.Text = "プロセス";
-            colProcess.Width = 120;
-            //
-            // colTitle
-            //
-            colTitle.Text = "タイトル";
-            colTitle.Width = 300;
-            //
-            // colState
-            //
-            colState.Text = "状態";
-            //
-            // colPosition
-            //
-            colPosition.Text = "位置";
-            colPosition.Width = 110;
-            //
-            // colSize
-            //
-            colSize.Text = "サイズ";
-            colSize.Width = 90;
-            //
-            // colMonitor
-            //
-            colMonitor.Text = "モニター";
-            colMonitor.Width = 90;
-            //
-            // imgIcons
-            //
-            imgIcons.ColorDepth = ColorDepth.Depth32Bit;
-            imgIcons.ImageSize = new Size(16, 16);
-            imgIcons.TransparentColor = Color.Transparent;
-            //
-            // grpLog
-            //
-            grpLog.Controls.Add(txtLog);
-            grpLog.Dock = DockStyle.Fill;
-            grpLog.Location = new Point(11, 457);
-            grpLog.Name = "grpLog";
-            grpLog.Size = new Size(798, 92);
-            grpLog.TabIndex = 4;
-            grpLog.TabStop = false;
-            grpLog.Text = "ログ";
-            //
-            // txtLog
-            //
-            txtLog.BackColor = SystemColors.Window;
-            txtLog.Dock = DockStyle.Fill;
-            txtLog.Location = new Point(3, 19);
-            txtLog.Multiline = true;
-            txtLog.Name = "txtLog";
-            txtLog.ReadOnly = true;
-            txtLog.ScrollBars = ScrollBars.Vertical;
-            txtLog.Size = new Size(792, 70);
-            txtLog.TabIndex = 0;
-            //
-            // trayIcon
-            //
-            trayIcon.ContextMenuStrip = trayMenu;
-            trayIcon.Text = "MonitorRecall";
-            trayIcon.Visible = true;
-            trayIcon.DoubleClick += mnuShow_Click;
-            //
-            // dlgExport
-            //
-            dlgExport.DefaultExt = "json";
-            dlgExport.FileName = "MonitorRecall.json";
-            dlgExport.Filter = "MonitorRecall 設定 (*.json)|*.json|すべてのファイル (*.*)|*.*";
-            dlgExport.Title = "設定のエクスポート";
-            //
-            // dlgImport
-            //
-            dlgImport.DefaultExt = "json";
-            dlgImport.Filter = "MonitorRecall 設定 (*.json)|*.json|すべてのファイル (*.*)|*.*";
-            dlgImport.Title = "設定のインポート";
-            //
-            // trayMenu
-            //
-            trayMenu.Items.AddRange(new ToolStripItem[] { mnuShow, mnuSep1, mnuSave, mnuRestore, mnuSep2, mnuExit });
-            trayMenu.Name = "trayMenu";
-            trayMenu.Size = new Size(161, 104);
-            //
-            // mnuShow
-            //
-            mnuShow.Name = "mnuShow";
-            mnuShow.Size = new Size(160, 22);
-            mnuShow.Text = "ウインドウを表示";
-            mnuShow.Click += mnuShow_Click;
-            //
-            // mnuSep1
-            //
-            mnuSep1.Name = "mnuSep1";
-            mnuSep1.Size = new Size(157, 6);
-            //
-            // mnuSave
-            //
-            mnuSave.Name = "mnuSave";
-            mnuSave.Size = new Size(160, 22);
-            mnuSave.Text = "今すぐ保存";
-            mnuSave.Click += btnSave_Click;
-            //
-            // mnuRestore
-            //
-            mnuRestore.Name = "mnuRestore";
-            mnuRestore.Size = new Size(160, 22);
-            mnuRestore.Text = "今すぐ復元";
-            mnuRestore.Click += btnRestore_Click;
-            //
-            // mnuSep2
-            //
-            mnuSep2.Name = "mnuSep2";
-            mnuSep2.Size = new Size(157, 6);
-            //
-            // mnuExit
-            //
-            mnuExit.Name = "mnuExit";
-            mnuExit.Size = new Size(160, 22);
-            mnuExit.Text = "終了";
-            mnuExit.Click += mnuExit_Click;
-            //
-            // MainForm
-            //
-            AutoScaleDimensions = new SizeF(96F, 96F);
-            AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(820, 584);
-            Controls.Add(tlpRoot);
-            Controls.Add(menuMain);
-            MainMenuStrip = menuMain;
-            Font = new Font("Yu Gothic UI", 9F);
-            MinimumSize = new Size(600, 420);
-            Name = "MainForm";
-            StartPosition = FormStartPosition.CenterScreen;
-            Text = "MonitorRecall - マルチモニターのウインドウ配置を記憶・復元";
-            menuMain.ResumeLayout(false);
-            menuMain.PerformLayout();
-            tlpRoot.ResumeLayout(false);
-            tlpRoot.PerformLayout();
-            grpStatus.ResumeLayout(false);
-            grpStatus.PerformLayout();
-            tlpStatus.ResumeLayout(false);
-            tlpStatus.PerformLayout();
-            flpButtons.ResumeLayout(false);
-            flpButtons.PerformLayout();
-            grpOptions.ResumeLayout(false);
-            grpOptions.PerformLayout();
-            flpOptions.ResumeLayout(false);
-            flpOptions.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)numInterval).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numDelay).EndInit();
-            grpWindows.ResumeLayout(false);
-            grpLog.ResumeLayout(false);
-            grpLog.PerformLayout();
-            trayMenu.ResumeLayout(false);
-            ResumeLayout(false);
-            PerformLayout();
-        }
+		/// <summary>
+		///  Required method for Designer support - do not modify
+		///  the contents of this method with the code editor.
+		/// </summary>
+		private void InitializeComponent() {
+			this.components = new System.ComponentModel.Container();
+			this.menuMain = new MenuStrip();
+			this.mnuFile = new ToolStripMenuItem();
+			this.mnuExport = new ToolStripMenuItem();
+			this.mnuImport = new ToolStripMenuItem();
+			this.mnuFileSep = new ToolStripSeparator();
+			this.mnuFileExit = new ToolStripMenuItem();
+			this.pnlRoot = new Panel();
+			this.splitWindows = new SplitContainer();
+			this.splitMain = new SplitContainer();
+			this.grpHistory = new GroupBox();
+			this.lstHistory = new ListBox();
+			this.btnRestoreHistory = new Button();
+			this.grpLog = new GroupBox();
+			this.txtLog = new TextBox();
+			this.grpOptions = new GroupBox();
+			this.flpOptions = new FlowLayoutPanel();
+			this.chkWatch = new CheckBox();
+			this.lblInterval = new Label();
+			this.numInterval = new NumericUpDown();
+			this.lblDelay = new Label();
+			this.numDelay = new NumericUpDown();
+			this.chkStartup = new CheckBox();
+			this.flpButtons = new FlowLayoutPanel();
+			this.btnSave = new Button();
+			this.btnRestore = new Button();
+			this.btnBaseline = new Button();
+			this.grpStatus = new GroupBox();
+			this.lblWatchCaption = new Label();
+			this.lblWatch = new Label();
+			this.lblMonitorCaption = new Label();
+			this.lblMonitor = new Label();
+			this.lblSavedCaption = new Label();
+			this.lblSaved = new Label();
+			this.grpWindows = new GroupBox();
+			this.lvWindows = new ListView();
+			this.colProcess = new ColumnHeader();
+			this.colTitle = new ColumnHeader();
+			this.colState = new ColumnHeader();
+			this.colPosition = new ColumnHeader();
+			this.colSize = new ColumnHeader();
+			this.colMonitor = new ColumnHeader();
+			this.imgIcons = new ImageList( this.components );
+			this.trayIcon = new NotifyIcon( this.components );
+			this.trayMenu = new ContextMenuStrip( this.components );
+			this.mnuShow = new ToolStripMenuItem();
+			this.mnuSep1 = new ToolStripSeparator();
+			this.mnuSave = new ToolStripMenuItem();
+			this.mnuRestore = new ToolStripMenuItem();
+			this.mnuSep2 = new ToolStripSeparator();
+			this.mnuExit = new ToolStripMenuItem();
+			this.dlgExport = new SaveFileDialog();
+			this.dlgImport = new OpenFileDialog();
+			this.menuMain.SuspendLayout();
+			this.pnlRoot.SuspendLayout();
+			( (System.ComponentModel.ISupportInitialize)this.splitWindows ).BeginInit();
+			this.splitWindows.Panel1.SuspendLayout();
+			this.splitWindows.Panel2.SuspendLayout();
+			this.splitWindows.SuspendLayout();
+			( (System.ComponentModel.ISupportInitialize)this.splitMain ).BeginInit();
+			this.splitMain.Panel1.SuspendLayout();
+			this.splitMain.Panel2.SuspendLayout();
+			this.splitMain.SuspendLayout();
+			this.grpHistory.SuspendLayout();
+			this.grpLog.SuspendLayout();
+			this.grpOptions.SuspendLayout();
+			this.flpOptions.SuspendLayout();
+			( (System.ComponentModel.ISupportInitialize)this.numInterval ).BeginInit();
+			( (System.ComponentModel.ISupportInitialize)this.numDelay ).BeginInit();
+			this.flpButtons.SuspendLayout();
+			this.grpStatus.SuspendLayout();
+			this.grpWindows.SuspendLayout();
+			this.trayMenu.SuspendLayout();
+			this.SuspendLayout();
+			// 
+			// menuMain
+			// 
+			this.menuMain.Items.AddRange( new ToolStripItem[] { this.mnuFile } );
+			this.menuMain.Location = new Point( 0, 0 );
+			this.menuMain.Name = "menuMain";
+			this.menuMain.Size = new Size( 820, 24 );
+			this.menuMain.TabIndex = 1;
+			// 
+			// mnuFile
+			// 
+			this.mnuFile.DropDownItems.AddRange( new ToolStripItem[] { this.mnuExport, this.mnuImport, this.mnuFileSep, this.mnuFileExit } );
+			this.mnuFile.Name = "mnuFile";
+			this.mnuFile.Size = new Size( 67, 20 );
+			this.mnuFile.Text = "ファイル(&F)";
+			// 
+			// mnuExport
+			// 
+			this.mnuExport.Name = "mnuExport";
+			this.mnuExport.Size = new Size( 150, 22 );
+			this.mnuExport.Text = "エクスポート(&E)...";
+			this.mnuExport.Click +=  this.mnuExport_Click ;
+			// 
+			// mnuImport
+			// 
+			this.mnuImport.Name = "mnuImport";
+			this.mnuImport.Size = new Size( 150, 22 );
+			this.mnuImport.Text = "インポート(&I)...";
+			this.mnuImport.Click +=  this.mnuImport_Click ;
+			// 
+			// mnuFileSep
+			// 
+			this.mnuFileSep.Name = "mnuFileSep";
+			this.mnuFileSep.Size = new Size( 147, 6 );
+			// 
+			// mnuFileExit
+			// 
+			this.mnuFileExit.Name = "mnuFileExit";
+			this.mnuFileExit.Size = new Size( 150, 22 );
+			this.mnuFileExit.Text = "終了(&X)";
+			this.mnuFileExit.Click +=  this.mnuExit_Click ;
+			// 
+			// pnlRoot
+			// 
+			this.pnlRoot.Controls.Add( this.splitWindows );
+			this.pnlRoot.Dock = DockStyle.Fill;
+			this.pnlRoot.Location = new Point( 0, 24 );
+			this.pnlRoot.Name = "pnlRoot";
+			this.pnlRoot.Padding = new Padding( 8 );
+			this.pnlRoot.Size = new Size( 820, 560 );
+			this.pnlRoot.TabIndex = 0;
+			// 
+			// splitWindows
+			// 
+			this.splitWindows.Dock = DockStyle.Fill;
+			this.splitWindows.FixedPanel = FixedPanel.Panel1;
+			this.splitWindows.Location = new Point( 8, 8 );
+			this.splitWindows.Name = "splitWindows";
+			// 
+			// splitWindows.Panel1
+			// 
+			this.splitWindows.Panel1.Controls.Add( this.splitMain );
+			this.splitWindows.Panel1.Controls.Add( this.grpOptions );
+			this.splitWindows.Panel1.Controls.Add( this.flpButtons );
+			this.splitWindows.Panel1.Controls.Add( this.grpStatus );
+			// 
+			// splitWindows.Panel2
+			// 
+			this.splitWindows.Panel2.Controls.Add( this.grpWindows );
+			this.splitWindows.Size = new Size( 804, 544 );
+			this.splitWindows.SplitterDistance = 420;
+			this.splitWindows.TabIndex = 0;
+			// 
+			// splitMain
+			// 
+			this.splitMain.Dock = DockStyle.Fill;
+			this.splitMain.Location = new Point( 0, 223 );
+			this.splitMain.Name = "splitMain";
+			this.splitMain.Orientation = Orientation.Horizontal;
+			// 
+			// splitMain.Panel1
+			// 
+			this.splitMain.Panel1.Controls.Add( this.grpHistory );
+			// 
+			// splitMain.Panel2
+			// 
+			this.splitMain.Panel2.Controls.Add( this.grpLog );
+			this.splitMain.Size = new Size( 420, 321 );
+			this.splitMain.SplitterDistance = 198;
+			this.splitMain.TabIndex = 0;
+			// 
+			// grpHistory
+			// 
+			this.grpHistory.Controls.Add( this.lstHistory );
+			this.grpHistory.Controls.Add( this.btnRestoreHistory );
+			this.grpHistory.Dock = DockStyle.Fill;
+			this.grpHistory.Location = new Point( 0, 0 );
+			this.grpHistory.Name = "grpHistory";
+			this.grpHistory.Size = new Size( 420, 198 );
+			this.grpHistory.TabIndex = 0;
+			this.grpHistory.TabStop = false;
+			this.grpHistory.Text = "履歴";
+			// 
+			// lstHistory
+			// 
+			this.lstHistory.Dock = DockStyle.Fill;
+			this.lstHistory.IntegralHeight = false;
+			this.lstHistory.Location = new Point( 3, 19 );
+			this.lstHistory.Name = "lstHistory";
+			this.lstHistory.Size = new Size( 414, 147 );
+			this.lstHistory.TabIndex = 0;
+			this.lstHistory.SelectedIndexChanged +=  this.lstHistory_SelectedIndexChanged ;
+			this.lstHistory.DoubleClick +=  this.btnRestoreHistory_Click ;
+			// 
+			// btnRestoreHistory
+			// 
+			this.btnRestoreHistory.Dock = DockStyle.Bottom;
+			this.btnRestoreHistory.Location = new Point( 3, 166 );
+			this.btnRestoreHistory.Name = "btnRestoreHistory";
+			this.btnRestoreHistory.Size = new Size( 414, 29 );
+			this.btnRestoreHistory.TabIndex = 1;
+			this.btnRestoreHistory.Text = "選択した配置に復元";
+			this.btnRestoreHistory.UseVisualStyleBackColor = true;
+			this.btnRestoreHistory.Click +=  this.btnRestoreHistory_Click ;
+			// 
+			// grpLog
+			// 
+			this.grpLog.Controls.Add( this.txtLog );
+			this.grpLog.Dock = DockStyle.Fill;
+			this.grpLog.Location = new Point( 0, 0 );
+			this.grpLog.Name = "grpLog";
+			this.grpLog.Size = new Size( 420, 119 );
+			this.grpLog.TabIndex = 0;
+			this.grpLog.TabStop = false;
+			this.grpLog.Text = "ログ";
+			// 
+			// txtLog
+			// 
+			this.txtLog.BackColor = SystemColors.Window;
+			this.txtLog.Dock = DockStyle.Fill;
+			this.txtLog.Location = new Point( 3, 19 );
+			this.txtLog.Multiline = true;
+			this.txtLog.Name = "txtLog";
+			this.txtLog.ReadOnly = true;
+			this.txtLog.ScrollBars = ScrollBars.Vertical;
+			this.txtLog.Size = new Size( 414, 97 );
+			this.txtLog.TabIndex = 0;
+			// 
+			// grpOptions
+			// 
+			this.grpOptions.Controls.Add( this.flpOptions );
+			this.grpOptions.Dock = DockStyle.Top;
+			this.grpOptions.Location = new Point( 0, 131 );
+			this.grpOptions.Name = "grpOptions";
+			this.grpOptions.Size = new Size( 420, 92 );
+			this.grpOptions.TabIndex = 2;
+			this.grpOptions.TabStop = false;
+			this.grpOptions.Text = "設定";
+			// 
+			// flpOptions
+			// 
+			this.flpOptions.Controls.Add( this.chkWatch );
+			this.flpOptions.Controls.Add( this.lblInterval );
+			this.flpOptions.Controls.Add( this.numInterval );
+			this.flpOptions.Controls.Add( this.chkStartup );
+			this.flpOptions.Controls.Add( this.lblDelay );
+			this.flpOptions.Controls.Add( this.numDelay );
+			this.flpOptions.Dock = DockStyle.Fill;
+			this.flpOptions.Location = new Point( 3, 19 );
+			this.flpOptions.Name = "flpOptions";
+			this.flpOptions.Padding = new Padding( 4 );
+			this.flpOptions.Size = new Size( 414, 70 );
+			this.flpOptions.TabIndex = 0;
+			// 
+			// chkWatch
+			// 
+			this.chkWatch.AutoSize = true;
+			this.chkWatch.Location = new Point( 7, 9 );
+			this.chkWatch.Margin = new Padding( 3, 5, 19, 3 );
+			this.chkWatch.Name = "chkWatch";
+			this.chkWatch.Size = new Size( 74, 19 );
+			this.chkWatch.TabIndex = 0;
+			this.chkWatch.Text = "自動監視";
+			this.chkWatch.UseVisualStyleBackColor = true;
+			this.chkWatch.CheckedChanged +=  this.chkWatch_CheckedChanged ;
+			// 
+			// lblInterval
+			// 
+			this.lblInterval.AutoSize = true;
+			this.lblInterval.Location = new Point( 103, 11 );
+			this.lblInterval.Margin = new Padding( 3, 7, 0, 0 );
+			this.lblInterval.Name = "lblInterval";
+			this.lblInterval.Size = new Size( 78, 15 );
+			this.lblInterval.TabIndex = 1;
+			this.lblInterval.Text = "保存間隔(秒):";
+			// 
+			// numInterval
+			// 
+			this.numInterval.Location = new Point( 184, 7 );
+			this.numInterval.Margin = new Padding( 3, 3, 19, 3 );
+			this.numInterval.Maximum = new decimal( new int[] { 3600, 0, 0, 0 } );
+			this.numInterval.Minimum = new decimal( new int[] { 1, 0, 0, 0 } );
+			this.numInterval.Name = "numInterval";
+			this.numInterval.Size = new Size( 60, 23 );
+			this.numInterval.TabIndex = 2;
+			this.numInterval.Value = new decimal( new int[] { 10, 0, 0, 0 } );
+			this.numInterval.ValueChanged +=  this.numInterval_ValueChanged ;
+			// 
+			// lblDelay
+			// 
+			this.lblDelay.AutoSize = true;
+			this.lblDelay.Location = new Point( 7, 40 );
+			this.lblDelay.Margin = new Padding( 3, 7, 0, 0 );
+			this.lblDelay.Name = "lblDelay";
+			this.lblDelay.Size = new Size( 104, 15 );
+			this.lblDelay.TabIndex = 3;
+			this.lblDelay.Text = "復元までの待ち(秒):";
+			// 
+			// numDelay
+			// 
+			this.numDelay.Location = new Point( 114, 36 );
+			this.numDelay.Margin = new Padding( 3, 3, 19, 3 );
+			this.numDelay.Maximum = new decimal( new int[] { 120, 0, 0, 0 } );
+			this.numDelay.Name = "numDelay";
+			this.numDelay.Size = new Size( 60, 23 );
+			this.numDelay.TabIndex = 4;
+			this.numDelay.Value = new decimal( new int[] { 5, 0, 0, 0 } );
+			this.numDelay.ValueChanged +=  this.numDelay_ValueChanged ;
+			// 
+			// chkStartup
+			// 
+			this.chkStartup.AutoSize = true;
+			this.chkStartup.Location = new Point( 266, 9 );
+			this.chkStartup.Margin = new Padding( 3, 5, 3, 3 );
+			this.chkStartup.Name = "chkStartup";
+			this.chkStartup.Size = new Size( 107, 19 );
+			this.chkStartup.TabIndex = 5;
+			this.chkStartup.Text = "ログオン時に起動";
+			this.chkStartup.UseVisualStyleBackColor = true;
+			this.chkStartup.CheckedChanged +=  this.chkStartup_CheckedChanged ;
+			// 
+			// flpButtons
+			// 
+			this.flpButtons.AutoSize = true;
+			this.flpButtons.Controls.Add( this.btnSave );
+			this.flpButtons.Controls.Add( this.btnRestore );
+			this.flpButtons.Controls.Add( this.btnBaseline );
+			this.flpButtons.Dock = DockStyle.Top;
+			this.flpButtons.Location = new Point( 0, 96 );
+			this.flpButtons.Name = "flpButtons";
+			this.flpButtons.Size = new Size( 420, 35 );
+			this.flpButtons.TabIndex = 1;
+			// 
+			// btnSave
+			// 
+			this.btnSave.AutoSize = true;
+			this.btnSave.Location = new Point( 3, 3 );
+			this.btnSave.Name = "btnSave";
+			this.btnSave.Padding = new Padding( 8, 2, 8, 2 );
+			this.btnSave.Size = new Size( 90, 29 );
+			this.btnSave.TabIndex = 0;
+			this.btnSave.Text = "今すぐ保存";
+			this.btnSave.UseVisualStyleBackColor = true;
+			this.btnSave.Click +=  this.btnSave_Click ;
+			// 
+			// btnRestore
+			// 
+			this.btnRestore.AutoSize = true;
+			this.btnRestore.Location = new Point( 99, 3 );
+			this.btnRestore.Name = "btnRestore";
+			this.btnRestore.Padding = new Padding( 8, 2, 8, 2 );
+			this.btnRestore.Size = new Size( 90, 29 );
+			this.btnRestore.TabIndex = 1;
+			this.btnRestore.Text = "今すぐ復元";
+			this.btnRestore.UseVisualStyleBackColor = true;
+			this.btnRestore.Click +=  this.btnRestore_Click ;
+			// 
+			// btnBaseline
+			// 
+			this.btnBaseline.AutoSize = true;
+			this.btnBaseline.Location = new Point( 195, 3 );
+			this.btnBaseline.Name = "btnBaseline";
+			this.btnBaseline.Padding = new Padding( 8, 2, 8, 2 );
+			this.btnBaseline.Size = new Size( 190, 29 );
+			this.btnBaseline.TabIndex = 2;
+			this.btnBaseline.Text = "現在のモニター構成を基準にする";
+			this.btnBaseline.UseVisualStyleBackColor = true;
+			this.btnBaseline.Click +=  this.btnBaseline_Click ;
+			// 
+			// grpStatus
+			// 
+			this.grpStatus.Controls.Add( this.lblWatchCaption );
+			this.grpStatus.Controls.Add( this.lblWatch );
+			this.grpStatus.Controls.Add( this.lblMonitorCaption );
+			this.grpStatus.Controls.Add( this.lblMonitor );
+			this.grpStatus.Controls.Add( this.lblSavedCaption );
+			this.grpStatus.Controls.Add( this.lblSaved );
+			this.grpStatus.Dock = DockStyle.Top;
+			this.grpStatus.Location = new Point( 0, 0 );
+			this.grpStatus.Name = "grpStatus";
+			this.grpStatus.Size = new Size( 420, 96 );
+			this.grpStatus.TabIndex = 0;
+			this.grpStatus.TabStop = false;
+			this.grpStatus.Text = "状態";
+			// 
+			// lblWatchCaption
+			// 
+			this.lblWatchCaption.AutoSize = true;
+			this.lblWatchCaption.Location = new Point( 12, 24 );
+			this.lblWatchCaption.Margin = new Padding( 3, 4, 8, 4 );
+			this.lblWatchCaption.Name = "lblWatchCaption";
+			this.lblWatchCaption.Size = new Size( 58, 15 );
+			this.lblWatchCaption.TabIndex = 0;
+			this.lblWatchCaption.Text = "監視状態:";
+			// 
+			// lblWatch
+			// 
+			this.lblWatch.AutoSize = true;
+			this.lblWatch.Font = new Font( "Yu Gothic UI", 9F, FontStyle.Bold );
+			this.lblWatch.Location = new Point( 80, 24 );
+			this.lblWatch.Margin = new Padding( 3, 4, 3, 4 );
+			this.lblWatch.Name = "lblWatch";
+			this.lblWatch.Size = new Size( 43, 15 );
+			this.lblWatch.TabIndex = 1;
+			this.lblWatch.Text = "停止中";
+			// 
+			// lblMonitorCaption
+			// 
+			this.lblMonitorCaption.AutoSize = true;
+			this.lblMonitorCaption.Location = new Point( 12, 47 );
+			this.lblMonitorCaption.Margin = new Padding( 3, 4, 8, 4 );
+			this.lblMonitorCaption.Name = "lblMonitorCaption";
+			this.lblMonitorCaption.Size = new Size( 45, 15 );
+			this.lblMonitorCaption.TabIndex = 2;
+			this.lblMonitorCaption.Text = "モニター:";
+			// 
+			// lblMonitor
+			// 
+			this.lblMonitor.AutoSize = true;
+			this.lblMonitor.Location = new Point( 80, 47 );
+			this.lblMonitor.Margin = new Padding( 3, 4, 3, 4 );
+			this.lblMonitor.Name = "lblMonitor";
+			this.lblMonitor.Size = new Size( 12, 15 );
+			this.lblMonitor.TabIndex = 3;
+			this.lblMonitor.Text = "-";
+			// 
+			// lblSavedCaption
+			// 
+			this.lblSavedCaption.AutoSize = true;
+			this.lblSavedCaption.Location = new Point( 12, 70 );
+			this.lblSavedCaption.Margin = new Padding( 3, 4, 8, 4 );
+			this.lblSavedCaption.Name = "lblSavedCaption";
+			this.lblSavedCaption.Size = new Size( 58, 15 );
+			this.lblSavedCaption.TabIndex = 4;
+			this.lblSavedCaption.Text = "最終保存:";
+			// 
+			// lblSaved
+			// 
+			this.lblSaved.AutoSize = true;
+			this.lblSaved.Location = new Point( 80, 70 );
+			this.lblSaved.Margin = new Padding( 3, 4, 3, 4 );
+			this.lblSaved.Name = "lblSaved";
+			this.lblSaved.Size = new Size( 12, 15 );
+			this.lblSaved.TabIndex = 5;
+			this.lblSaved.Text = "-";
+			// 
+			// grpWindows
+			// 
+			this.grpWindows.Controls.Add( this.lvWindows );
+			this.grpWindows.Dock = DockStyle.Fill;
+			this.grpWindows.Location = new Point( 0, 0 );
+			this.grpWindows.Name = "grpWindows";
+			this.grpWindows.Size = new Size( 380, 544 );
+			this.grpWindows.TabIndex = 0;
+			this.grpWindows.TabStop = false;
+			this.grpWindows.Text = "保存済みのウインドウ";
+			// 
+			// lvWindows
+			// 
+			this.lvWindows.Columns.AddRange( new ColumnHeader[] { this.colProcess, this.colTitle, this.colState, this.colPosition, this.colSize, this.colMonitor } );
+			this.lvWindows.Dock = DockStyle.Fill;
+			this.lvWindows.FullRowSelect = true;
+			this.lvWindows.GridLines = true;
+			this.lvWindows.Location = new Point( 3, 19 );
+			this.lvWindows.Name = "lvWindows";
+			this.lvWindows.Size = new Size( 374, 522 );
+			this.lvWindows.SmallImageList = this.imgIcons;
+			this.lvWindows.TabIndex = 0;
+			this.lvWindows.UseCompatibleStateImageBehavior = false;
+			this.lvWindows.View = View.Details;
+			// 
+			// colProcess
+			// 
+			this.colProcess.Text = "プロセス";
+			this.colProcess.Width = 120;
+			// 
+			// colTitle
+			// 
+			this.colTitle.Text = "タイトル";
+			this.colTitle.Width = 300;
+			// 
+			// colState
+			// 
+			this.colState.Text = "状態";
+			// 
+			// colPosition
+			// 
+			this.colPosition.Text = "位置";
+			this.colPosition.Width = 110;
+			// 
+			// colSize
+			// 
+			this.colSize.Text = "サイズ";
+			this.colSize.Width = 90;
+			// 
+			// colMonitor
+			// 
+			this.colMonitor.Text = "モニター";
+			this.colMonitor.Width = 90;
+			// 
+			// imgIcons
+			// 
+			this.imgIcons.ColorDepth = ColorDepth.Depth32Bit;
+			this.imgIcons.ImageSize = new Size( 16, 16 );
+			this.imgIcons.TransparentColor = Color.Transparent;
+			// 
+			// trayIcon
+			// 
+			this.trayIcon.ContextMenuStrip = this.trayMenu;
+			this.trayIcon.Text = "MonitorRecall";
+			this.trayIcon.Visible = true;
+			this.trayIcon.DoubleClick +=  this.mnuShow_Click ;
+			// 
+			// trayMenu
+			// 
+			this.trayMenu.Items.AddRange( new ToolStripItem[] { this.mnuShow, this.mnuSep1, this.mnuSave, this.mnuRestore, this.mnuSep2, this.mnuExit } );
+			this.trayMenu.Name = "trayMenu";
+			this.trayMenu.Size = new Size( 152, 104 );
+			// 
+			// mnuShow
+			// 
+			this.mnuShow.Name = "mnuShow";
+			this.mnuShow.Size = new Size( 151, 22 );
+			this.mnuShow.Text = "ウインドウを表示";
+			this.mnuShow.Click +=  this.mnuShow_Click ;
+			// 
+			// mnuSep1
+			// 
+			this.mnuSep1.Name = "mnuSep1";
+			this.mnuSep1.Size = new Size( 148, 6 );
+			// 
+			// mnuSave
+			// 
+			this.mnuSave.Name = "mnuSave";
+			this.mnuSave.Size = new Size( 151, 22 );
+			this.mnuSave.Text = "今すぐ保存";
+			this.mnuSave.Click +=  this.btnSave_Click ;
+			// 
+			// mnuRestore
+			// 
+			this.mnuRestore.Name = "mnuRestore";
+			this.mnuRestore.Size = new Size( 151, 22 );
+			this.mnuRestore.Text = "今すぐ復元";
+			this.mnuRestore.Click +=  this.btnRestore_Click ;
+			// 
+			// mnuSep2
+			// 
+			this.mnuSep2.Name = "mnuSep2";
+			this.mnuSep2.Size = new Size( 148, 6 );
+			// 
+			// mnuExit
+			// 
+			this.mnuExit.Name = "mnuExit";
+			this.mnuExit.Size = new Size( 151, 22 );
+			this.mnuExit.Text = "終了";
+			this.mnuExit.Click +=  this.mnuExit_Click ;
+			// 
+			// dlgExport
+			// 
+			this.dlgExport.DefaultExt = "json";
+			this.dlgExport.FileName = "MonitorRecall.json";
+			this.dlgExport.Filter = "MonitorRecall 設定 (*.json)|*.json|すべてのファイル (*.*)|*.*";
+			this.dlgExport.Title = "設定のエクスポート";
+			// 
+			// dlgImport
+			// 
+			this.dlgImport.DefaultExt = "json";
+			this.dlgImport.Filter = "MonitorRecall 設定 (*.json)|*.json|すべてのファイル (*.*)|*.*";
+			this.dlgImport.Title = "設定のインポート";
+			// 
+			// MainForm
+			// 
+			this.AutoScaleDimensions = new SizeF( 96F, 96F );
+			this.AutoScaleMode = AutoScaleMode.Dpi;
+			this.ClientSize = new Size( 820, 584 );
+			this.Controls.Add( this.pnlRoot );
+			this.Controls.Add( this.menuMain );
+			this.Font = new Font( "Yu Gothic UI", 9F );
+			this.MainMenuStrip = this.menuMain;
+			this.MinimumSize = new Size( 600, 420 );
+			this.Name = "MainForm";
+			this.StartPosition = FormStartPosition.CenterScreen;
+			this.Text = "MonitorRecall - マルチモニターのウインドウ配置を記憶・復元";
+			this.menuMain.ResumeLayout( false );
+			this.menuMain.PerformLayout();
+			this.pnlRoot.ResumeLayout( false );
+			this.splitWindows.Panel1.ResumeLayout( false );
+			this.splitWindows.Panel1.PerformLayout();
+			this.splitWindows.Panel2.ResumeLayout( false );
+			( (System.ComponentModel.ISupportInitialize)this.splitWindows ).EndInit();
+			this.splitWindows.ResumeLayout( false );
+			this.splitMain.Panel1.ResumeLayout( false );
+			this.splitMain.Panel2.ResumeLayout( false );
+			( (System.ComponentModel.ISupportInitialize)this.splitMain ).EndInit();
+			this.splitMain.ResumeLayout( false );
+			this.grpHistory.ResumeLayout( false );
+			this.grpLog.ResumeLayout( false );
+			this.grpLog.PerformLayout();
+			this.grpOptions.ResumeLayout( false );
+			this.flpOptions.ResumeLayout( false );
+			this.flpOptions.PerformLayout();
+			( (System.ComponentModel.ISupportInitialize)this.numInterval ).EndInit();
+			( (System.ComponentModel.ISupportInitialize)this.numDelay ).EndInit();
+			this.flpButtons.ResumeLayout( false );
+			this.flpButtons.PerformLayout();
+			this.grpStatus.ResumeLayout( false );
+			this.grpStatus.PerformLayout();
+			this.grpWindows.ResumeLayout( false );
+			this.trayMenu.ResumeLayout( false );
+			this.ResumeLayout( false );
+			this.PerformLayout();
+		}
 
-        #endregion
+		#endregion
 
-        private MenuStrip menuMain;
+		private MenuStrip menuMain;
         private ToolStripMenuItem mnuFile;
         private ToolStripMenuItem mnuExport;
         private ToolStripMenuItem mnuImport;
         private ToolStripSeparator mnuFileSep;
         private ToolStripMenuItem mnuFileExit;
-        private TableLayoutPanel tlpRoot;
+        private Panel pnlRoot;
         private GroupBox grpStatus;
-        private TableLayoutPanel tlpStatus;
         private Label lblWatchCaption;
         private Label lblWatch;
         private Label lblMonitorCaption;
@@ -607,6 +662,11 @@
         private Label lblDelay;
         private NumericUpDown numDelay;
         private CheckBox chkStartup;
+        private SplitContainer splitMain;
+        private SplitContainer splitWindows;
+        private GroupBox grpHistory;
+        private ListBox lstHistory;
+        private Button btnRestoreHistory;
         private GroupBox grpWindows;
         private ListView lvWindows;
         private ColumnHeader colProcess;

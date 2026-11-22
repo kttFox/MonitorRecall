@@ -30,7 +30,9 @@ internal static class Program
         {
             case "save":
                 Native.AttachConsole(-1);
-                var data = LayoutManager.Save(path);
+                var (data, changed) = LayoutManager.Save(path);
+                if (data == null) { Console.WriteLine("保存中にモニター構成が変化したため、保存を破棄しました"); return 1; }
+                if (!changed) { Console.WriteLine("配置に変更がないため保存しませんでした"); return 0; }
                 Console.WriteLine($"{data.Windows.Count} 個のウインドウを保存しました -> {path}");
                 return 0;
 

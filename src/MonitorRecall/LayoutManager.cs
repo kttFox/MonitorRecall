@@ -10,6 +10,10 @@ public record WindowInfo(long Handle, string Process, string Class, string Title
 
 public record LayoutData(DateTime Saved, string Monitors, List<WindowInfo> Windows);
 
+/// <param name="Data">保存した（または変更がなく保存を見送った）配置。収集中にモニター構成が変わり破棄した場合は null</param>
+/// <param name="Changed">配置に変更があり、ファイルへ書き込んだか</param>
+public record SaveResult(LayoutData? Data, bool Changed);
+
 public static class LayoutManager
 {
     public static readonly string DefaultPath =
@@ -30,20 +34,28 @@ public static class LayoutManager
         return string.Join("|", parts);
     }
 
+    /// <summary>保存・復元の対象となるトップレベルウインドウか</summary>
+    public static bool IsTarget(IntPtr h)
+    {
+        // 非表示でも「最小化かつタイトルバーあり」はタスクトレイ格納中（Thunderbird など）とみなして対象にする
+        if (!IsWindowVisible(h) && !IsInTray(h)) return false;
+        if (GetWindow(h, 4 /*GW_OWNER*/) != IntPtr.Zero) return false;          // ダイアログ等
+        if ((GetWindowLong(h, -20 /*GWL_EXSTYLE*/) & 0x80 /*WS_EX_TOOLWINDOW*/) != 0) return false;
+        DwmGetWindowAttribute(h, 14 /*DWMWA_CLOAKED*/, out int cloaked, sizeof(int));
+        if (cloaked != 0) return false;                              // 別仮想デスクトップ等
+        if (Title(h).Length == 0) return false;
+        GetWindowThreadProcessId(h, out uint pid);
+        if (pid == Environment.ProcessId) return false;                     // MonitorRecall 自身
+        if (ClassName(h) == "OperationStatusWindow") return false;           // エクスプローラーのコピー進捗ダイアログ
+        return true;
+    }
+
     public static List<WindowInfo> Capture(bool taskbarOrder = true)
     {
         var handles = new List<IntPtr>();
         EnumWindows((h, _) =>
         {
-            // 非表示でも「最小化かつタイトルバーあり」はタスクトレイ格納中（Thunderbird など）とみなして対象にする
-            if (!IsWindowVisible(h) && !IsInTray(h)) return true;
-            if (GetWindow(h, 4 /*GW_OWNER*/) != IntPtr.Zero) return true;          // ダイアログ等
-            if ((GetWindowLong(h, -20 /*GWL_EXSTYLE*/) & 0x80 /*WS_EX_TOOLWINDOW*/) != 0) return true;
-            DwmGetWindowAttribute(h, 14 /*DWMWA_CLOAKED*/, out int cloaked, sizeof(int));
-            if (cloaked != 0) return true;                                          // 別仮想デスクトップ等
-            if (Title(h).Length == 0) return true;
-            if (ClassName(h) == "OperationStatusWindow") return true;               // エクスプローラーのコピー進捗ダイアログ
-            handles.Add(h);
+            if (IsTarget(h)) handles.Add(h);
             return true;
         }, IntPtr.Zero);
 
@@ -67,14 +79,77 @@ public static class LayoutManager
 
     static readonly object FileLock = new();
 
-    /// <param name="canCommit">書き込み直前に評価し、false なら保存を破棄する（収集中にモニター構成が変わった場合など）</param>
-    public static LayoutData? Save(string path, Func<bool>? canCommit = null)
+    static readonly string OwnProcessName = Process.GetCurrentProcess().ProcessName;
+
+    /// <summary>履歴として残す件数</summary>
+    public const int HistoryLimit = 100;
+
+    /// <summary>この時間内に続いた変更は 1 件の履歴にまとめる</summary>
+    static readonly TimeSpan HistoryMergeWindow = TimeSpan.FromMinutes(5);
+
+    public static string HistoryDir(string path) => Path.Combine(Path.GetDirectoryName(path)!, "history");
+
+    /// <summary>履歴ファイルの一覧（新しい順）</summary>
+    public static List<string> HistoryFiles(string path)
     {
-        lock (FileLock) return SaveCore(path, canCommit);
+        var dir = HistoryDir(path);
+        if (!Directory.Exists(dir)) return [];
+        return Directory.GetFiles(dir, "*.json").OrderByDescending(f => Path.GetFileName(f), StringComparer.Ordinal).ToList();
     }
 
-    static LayoutData? SaveCore(string path, Func<bool>? canCommit)
+    /// <summary>
+    /// 配置が同じかどうか。タイトルやハンドルは配置ではないので比較しない
+    /// （タイトルはブラウザなどで頻繁に変わり、そのたびに履歴が増えてしまう）
+    /// </summary>
+    static bool SamePlacement(LayoutData a, LayoutData b)
     {
+        static List<string> Keys(LayoutData d) => d.Windows
+            .Select(w => $"{w.Process}	{w.Class}	{w.ShowCmd}	{w.Left},{w.Top},{w.Right},{w.Bottom}	{w.Flags & WPF_RESTORETOMAXIMIZED}	{w.TaskbarOrder}")
+            .Order(StringComparer.Ordinal).ToList();
+        return a.Monitors == b.Monitors && Keys(a).SequenceEqual(Keys(b));
+    }
+
+    /// <summary>
+    /// 履歴に残すべき配置の変化があるか。両方に存在するウインドウ（ハンドルで対応付け）について、
+    /// 位置・サイズ・最大化の有無が変わったか、タスクバー上の相対的な並び順が変わったかを見る。
+    /// ウインドウの開閉や最小化・元に戻すだけ、他のウインドウの開閉による並び番号のずれは変化とみなさない
+    /// </summary>
+    static bool Rearranged(LayoutData prev, LayoutData cur)
+    {
+        if (prev.Monitors != cur.Monitors) return true;
+        static bool Maximized(WindowInfo w) => w.ShowCmd == SW_SHOWMAXIMIZED || (w.Flags & WPF_RESTORETOMAXIMIZED) != 0;
+
+        var before = prev.Windows.GroupBy(w => w.Handle).ToDictionary(g => g.Key, g => g.First());
+        var pairs = cur.Windows.Where(w => before.ContainsKey(w.Handle)).Select(w => (old: before[w.Handle], now: w)).ToList();
+        if (pairs.Any(p => p.old.Left != p.now.Left || p.old.Top != p.now.Top || p.old.Right != p.now.Right ||
+                           p.old.Bottom != p.now.Bottom || Maximized(p.old) != Maximized(p.now)))
+            return true;
+
+        // 並び順が両方で取れているものだけで相対順序を比べる
+        var ordered = pairs.Where(p => p.old.TaskbarOrder >= 0 && p.now.TaskbarOrder >= 0).ToList();
+        return !ordered.OrderBy(p => p.old.TaskbarOrder).Select(p => p.now.Handle)
+            .SequenceEqual(ordered.OrderBy(p => p.now.TaskbarOrder).Select(p => p.now.Handle));
+    }
+
+    static void AddHistory(string path, LayoutData data)
+    {
+        var dir = HistoryDir(path);
+        Directory.CreateDirectory(dir);
+        // 並べ替えの途中で何度も保存されるため、直前の履歴が新しいうちは置き換えて 1 件にまとめる。
+        // その前の履歴（並べ替える前の配置）は残る
+        var latest = HistoryFiles(path).FirstOrDefault();
+        if (latest != null && DateTime.Now - File.GetLastWriteTime(latest) < HistoryMergeWindow)
+            try { File.Delete(latest); } catch { }
+        WriteCore(Path.Combine(dir, $"{data.Saved:yyyyMMdd-HHmmss-fff}.json"), data);
+        foreach (var old in HistoryFiles(path).Skip(HistoryLimit))
+            try { File.Delete(old); } catch { }
+    }
+
+    /// <param name="canCommit">書き込み直前に評価し、false なら保存を破棄する（収集中にモニター構成が変わった場合など）</param>
+    public static SaveResult Save(string path, Func<bool>? canCommit = null)
+    {
+        // ウインドウ収集（UI Automation など）は数秒かかることがあるためロックの外で行い、
+        // ロックは書き込みの判定と書き込みだけに限る。収集中までロックすると UI スレッドの Load が待たされる
         var signature = MonitorSignature();
         var windows = Capture();
         // タスクトレイに格納中（非表示）のウインドウは列挙されないため、前回の保存内容を引き継ぐ。
@@ -93,11 +168,19 @@ public static class LayoutManager
 
         // 収集には時間がかかるため、その間にモニター構成が変わってウインドウが集約されていたら
         // 崩れた配置で上書きしないよう破棄する
-        if (MonitorSignature() != signature || (canCommit != null && !canCommit())) return null;
+        if (MonitorSignature() != signature || (canCommit != null && !canCommit())) return new(null, false);
 
         var data = new LayoutData(DateTime.Now, signature, windows);
-        WriteCore(path, data);
-        return data;
+        // 配置に変更がなければ書き込まない（履歴も増やさない）
+        if (prev != null && SamePlacement(prev, data)) return new(prev, false);
+        lock (FileLock)
+        {
+            WriteCore(path, data);
+            // 履歴はウインドウの移動などがあったときだけ残す（開閉・最小化・タスクバーの番号ずれでは増やさない）
+            if (prev == null || Rearranged(prev, data))
+                try { AddHistory(path, data); } catch { }
+        }
+        return new(data, true);
     }
 
     public static void Write(string path, LayoutData data)
@@ -196,9 +279,15 @@ public static class LayoutManager
     public static (int restored, int total) Restore(string path)
     {
         var data = Load(path);
-        if (data == null) return (0, 0);
+        return data == null ? (0, 0) : Restore(data);
+    }
 
-        var current = Capture();
+    /// <param name="reorderTaskbar">タスクバーボタンの並び順も戻すか（時間がかかるのでプレビューでは省く）</param>
+    public static (int restored, int total) Restore(LayoutData data, bool reorderTaskbar = true)
+    {
+        // 自分自身は対象外（古い保存データに含まれていても動かさない）
+        data = data with { Windows = data.Windows.Where(w => w.Process != OwnProcessName).ToList() };
+        var current = Capture(taskbarOrder: reorderTaskbar);
         var used = new HashSet<long>();
         var placed = new List<(IntPtr h, int order, int index)>();
         int count = 0;
@@ -269,7 +358,7 @@ public static class LayoutManager
         }
 
         // タスクバーボタンを保存時の並び順で登録し直す（順序不明のものは後ろへ）
-        if (placed.Any(x => x.order >= 0))
+        if (reorderTaskbar && placed.Any(x => x.order >= 0))
             Taskbar.Reorder(placed.OrderBy(x => x.order < 0).ThenBy(x => x.order).ThenBy(x => x.index).Select(x => x.h).ToList());
 
         return (count, data.Windows.Count);

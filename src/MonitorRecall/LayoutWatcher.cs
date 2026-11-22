@@ -22,6 +22,9 @@ internal sealed class LayoutWatcher : IDisposable
     public bool Enabled => _saveTimer.Enabled;
     public bool RestorePending => _restoreTimer.Enabled;
 
+    /// <summary>履歴のプレビュー中など、一時的に自動保存・自動復元を止める</summary>
+    public bool Suspended { get; set; }
+
     public event Action<string>? Log;
     public event Action? StateChanged;
 
@@ -56,18 +59,36 @@ internal sealed class LayoutWatcher : IDisposable
         _shownTimer.Start();
     }
 
-    void RestoreShown()
+    bool _restoringShown;
+
+    async void RestoreShown()
     {
         var ready = _shown.Where(kv => DateTime.Now - kv.Value >= TimeSpan.FromMilliseconds(400)).Select(kv => kv.Key).ToList();
         foreach (var h in ready) _shown.Remove(h);
         if (_shown.Count == 0) _shownTimer.Stop();
-        if (ready.Count == 0 || _restoreTimer.Enabled || LayoutManager.MonitorSignature() != BaselineSignature) return;
+        if (ready.Count == 0 || Suspended || _restoreTimer.Enabled || LayoutManager.MonitorSignature() != BaselineSignature) return;
+        if (_restoringShown) { foreach (var h in ready) _shown[h] = DateTime.Now; _shownTimer.Start(); return; }
 
-        foreach (var h in ready)
+        // EVENT_OBJECT_SHOW はツールチップやメニューでも頻繁に届く。対象判定とウインドウ列挙は
+        // 他プロセスへの問い合わせを伴い時間がかかるため、UI スレッドの外で行う
+        _restoringShown = true;
+        List<string> restored;
+        try
         {
-            if (!LayoutManager.RestoreOne(_path, h)) continue;
-            Log?.Invoke($"再表示されたウインドウを復元しました: {Native.Title(h)}");
+            restored = await Task.Run(() =>
+            {
+                var titles = new List<string>();
+                foreach (var h in ready)
+                {
+                    if (!Native.IsWindow(h) || !LayoutManager.IsTarget(h)) continue;
+                    if (LayoutManager.RestoreOne(_path, h)) titles.Add(Native.Title(h));
+                }
+                return titles;
+            });
         }
+        catch { restored = []; }
+        finally { _restoringShown = false; }
+        foreach (var t in restored) Log?.Invoke($"再表示されたウインドウを復元しました: {t}");
     }
 
     public void SetInterval(int sec) => _saveTimer.Interval = Math.Max(1, sec) * 1000;
@@ -115,10 +136,12 @@ internal sealed class LayoutWatcher : IDisposable
         {
             var gen = Volatile.Read(ref _generation);
             var baseline = BaselineSignature;
-            var data = await Task.Run(() => LayoutManager.Save(_path, () =>
+            var (data, changed) = await Task.Run(() => LayoutManager.Save(_path, () =>
                 Volatile.Read(ref _generation) == gen && LayoutManager.MonitorSignature() == baseline));
             if (data == null) Log?.Invoke("保存中にモニター構成が変化したため、保存を破棄しました");
-            else if (!quiet) Log?.Invoke($"{data.Windows.Count} 個のウインドウを保存しました");
+            else if (changed) { if (!quiet) Log?.Invoke($"{data.Windows.Count} 個のウインドウを保存しました"); }
+            else if (!quiet) Log?.Invoke("配置に変更がないため保存しませんでした");
+            if (data == null || !changed) return;
         }
         catch (Exception ex)
         {
@@ -131,9 +154,10 @@ internal sealed class LayoutWatcher : IDisposable
         StateChanged?.Invoke();
     }
 
-    public (int restored, int total) Restore()
+    /// <param name="path">復元に使う保存ファイル（省略時は最新の配置）</param>
+    public (int restored, int total) Restore(string? path = null)
     {
-        var result = LayoutManager.Restore(_path);
+        var result = LayoutManager.Restore(path ?? _path);
         Log?.Invoke(result.total == 0
             ? "保存データがありません"
             : $"{result.restored} / {result.total} 個のウインドウを復元しました");
@@ -149,6 +173,7 @@ internal sealed class LayoutWatcher : IDisposable
 
     void Check()
     {
+        if (Suspended) return;
         var sig = LayoutManager.MonitorSignature();
         if (sig != _lastSignature)
         {

@@ -102,6 +102,49 @@ internal sealed partial class MainForm : Form
         RefreshView();
     }
 
+    // ---- 履歴 ----
+    // 先頭は最新の保存内容、以降は履歴（新しい順）。選択した配置のウインドウ一覧を右に表示する。
+
+    sealed record HistoryEntry(string File, LayoutData Data, bool Latest)
+    {
+        public override string ToString() =>
+            (Latest ? "最新  " : "") + $"{Data.Saved:yyyy/MM/dd HH:mm:ss}（{Data.Windows.Count} 個 / {LayoutWatcher.MonitorCount(Data.Monitors)} 台）";
+    }
+
+    /// <summary>履歴一覧を読み直す。選択中の項目はファイル名で引き継ぐ</summary>
+    void RefreshHistory()
+    {
+        var selected = (lstHistory.SelectedItem as HistoryEntry)?.File;
+        var entries = new List<HistoryEntry>();
+        try { if (LayoutManager.Load(_path) is { } latest) entries.Add(new(_path, latest, true)); } catch { }
+        foreach (var file in LayoutManager.HistoryFiles(_path))
+        {
+            try { if (LayoutManager.Load(file) is { } d) entries.Add(new(file, d, false)); } catch { }
+        }
+
+        lstHistory.BeginUpdate();
+        lstHistory.Items.Clear();
+        foreach (var e in entries) lstHistory.Items.Add(e);
+        int idx = entries.FindIndex(e => e.File == selected);
+        lstHistory.SelectedIndex = idx >= 0 ? idx : (entries.Count > 0 ? 0 : -1);
+        lstHistory.EndUpdate();
+        if (entries.Count == 0) ShowWindows(null);
+        btnRestoreHistory.Enabled = lstHistory.SelectedItem != null;
+    }
+
+    void lstHistory_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        btnRestoreHistory.Enabled = lstHistory.SelectedItem != null;
+        ShowWindows((lstHistory.SelectedItem as HistoryEntry)?.Data);
+    }
+
+    void btnRestoreHistory_Click(object? sender, EventArgs e)
+    {
+        if (lstHistory.SelectedItem is not HistoryEntry entry) return;
+        if (!entry.Latest) AppendLog($"履歴から復元します: {entry.Data.Saved:yyyy/MM/dd HH:mm:ss}");
+        _watcher.Restore(entry.File);
+    }
+
     void chkWatch_CheckedChanged(object? sender, EventArgs e)
     {
         if (_loading) return;
@@ -158,6 +201,13 @@ internal sealed partial class MainForm : Form
         base.SetVisibleCore(value);
     }
 
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        // コンストラクターの時点では非表示のため履歴が読み込まれていない
+        RefreshHistory();
+    }
+
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         // × ボタンはトレイへ格納。終了はトレイメニューから
@@ -206,6 +256,16 @@ internal sealed partial class MainForm : Form
         var tip = $"MonitorRecall - {lblWatch.Text}";
         trayIcon.Text = tip.Length > 63 ? tip[..63] : tip;   // NotifyIcon.Text は 63 文字まで
 
+        // トレイ格納中は一覧を作り直さない（表示したときに ShowMain から更新される）
+        if (!Visible) return;
+
+        RefreshHistory();
+    }
+
+    /// <summary>保存済みのウインドウ一覧を表示する</summary>
+    void ShowWindows(LayoutData? data)
+    {
+        grpWindows.Text = data == null ? "保存済みのウインドウ" : $"保存済みのウインドウ（{data.Saved:yyyy/MM/dd HH:mm:ss}）";
         var screens = Screen.AllScreens;
         lvWindows.BeginUpdate();
         lvWindows.Items.Clear();
@@ -230,13 +290,20 @@ internal sealed partial class MainForm : Form
     }
 
     /// <summary>実行ファイルのアイコンを ImageList に登録し、そのキーを返す</summary>
+    readonly Dictionary<string, string> _exeByProcess = new();
+
     string IconKey(WindowInfo w)
     {
         var exe = w.ExePath;
-        if (string.IsNullOrEmpty(exe))   // 旧形式の保存データ: 起動中の同名プロセスから探す
+        if (string.IsNullOrEmpty(exe))   // 旧形式の保存データ: 起動中の同名プロセスから探す（全プロセス列挙は重いので結果を覚えておく）
         {
-            var pr = System.Diagnostics.Process.GetProcessesByName(w.Process).FirstOrDefault();
-            if (pr != null) using (pr) exe = Native.ProcessPath((uint)pr.Id);
+            if (!_exeByProcess.TryGetValue(w.Process, out exe))
+            {
+                var pr = System.Diagnostics.Process.GetProcessesByName(w.Process).FirstOrDefault();
+                exe = "";
+                if (pr != null) using (pr) exe = Native.ProcessPath((uint)pr.Id);
+                _exeByProcess[w.Process] = exe;
+            }
         }
         var key = string.IsNullOrEmpty(exe) ? "*" : exe.ToLowerInvariant();
         if (imgIcons.Images.ContainsKey(key)) return key;

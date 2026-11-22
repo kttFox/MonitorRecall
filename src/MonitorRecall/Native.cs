@@ -54,6 +54,14 @@ internal static class Native
     [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
 
     public static readonly IntPtr HWND_BROADCAST = new(0xffff);
+    public static readonly IntPtr HWND_TOP = IntPtr.Zero;
+    public const uint SWP_NOSIZE = 0x0001, SWP_NOMOVE = 0x0002, SWP_NOACTIVATE = 0x0010;
+
+    [DllImport("user32.dll")]
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
     /// <summary>多重起動時に既存インスタンスへ「ウインドウを表示」を依頼するメッセージ</summary>
     public static readonly int WM_SHOWME = RegisterWindowMessage("MonitorRecall.ShowMe");
 
